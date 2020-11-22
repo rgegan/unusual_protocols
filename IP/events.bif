@@ -1,0 +1,2 @@
+event new_ip_protocol%(src_ip: addr, dst_ip: addr, protocol: count, esp_protocol: count%);
+event test%(src: count%);
