@@ -1,0 +1,1 @@
+event eth_reply%(src_ip: string, dst_ip: string, protocol: count%);
