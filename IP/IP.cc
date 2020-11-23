@@ -288,7 +288,7 @@ bool IPAnalyzer::AnalyzePacket(size_t len, const uint8_t* data, Packet* packet)
 		char esp_string[255];
 		int esp_protocol = 256;
 
-		// Get proto in ESP packets
+		// Get the protocols in the ESP packets
 		if (packet->proto == 50)  //
 		//if ( packet->ip_hdr->LastHeader() == IPPROTO_ESP )
 		{
