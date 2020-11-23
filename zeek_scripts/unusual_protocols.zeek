@@ -1,10 +1,10 @@
 module Unusual_protocols;
 
-# options variables (can set with cmd line, but for now use consts)
+# options variables 
 # log_once, True = log every time a packet with that protocol appears past threshold, False = log once past threshold
 const log_once = F;
 # reset period = reset the protocol logging every X hours (0 means never reset)
-const reset_period = 10000000;
+const reset_period = 0;
 # log_all, True = log every protocol over a threshold (log_all_thresh), False = log only those specified in thresholds.file
 const log_all = T;
 const log_all_thresh = 1;
@@ -59,9 +59,11 @@ const sctp_thresh = 1;
 global proto_counts: vector of count;
 global protos_logged: vector of bool;
 global packet_count: count = 0;
+global cycle_count: count = 0;
+global packet_total: count = 0;
 
 export {
-    redef enum Log::ID += { LOG };
+    redef enum Log::ID += { LOG, LOG2 };
 
     type Info: record {
         ts: time        &log;
@@ -70,6 +72,12 @@ export {
 	protocol: count &log;
 	esp: count &log;
 	protocol_name: string &log;
+    };
+
+    type Totals: record {
+	protocol: count &log;
+	protocol_name: string &log;
+	protocol_total: count &log;
     };
 }
 
@@ -83,7 +91,7 @@ event zeek_init() &priority=5
     # Create the stream. This adds a default filter automatically.
     Log::create_stream(Unusual_protocols::LOG, [$columns=Info, $path="unusual_protocols"]);
     # Create a stream for logging the distribution and other stats
-    #Log::create_stream(Unusual_protocols::LOG, [$columns=Info, $path="protocol_stats"]);
+    Log::create_stream(Unusual_protocols::LOG2, [$columns=Totals, $path="protocol_totals"]);
     # Fill the count array with 0s
     local i: count;
     i = 0;
@@ -156,10 +164,8 @@ event new_ip_protocol(src_ip: addr, dst_ip: addr, protocol: count, esp_protocol:
         {
 		if( log_all == T) 
 		{
-			print "here";
 			if(proto_counts[protocol] >= log_all_thresh)
 			{
-				print "there";
 				Log::write(Unusual_protocols::LOG, rec);	
 				if ( log_once == T)
                         	{
@@ -190,16 +196,32 @@ event new_ip_protocol(src_ip: addr, dst_ip: addr, protocol: count, esp_protocol:
         #	Log::write(Unusual_protocols::LOG, rec);	
 		
 	}
-	if (packet_count >= reset_period)
+	if (packet_count >= reset_period && reset_period != 0)
 	{
 		local j: count = 0;
+		local total_rec: Unusual_protocols::Totals;
 
+		packet_total += packet_count;
+		cycle_count += 1;
+		total_rec = [$protocol=packet_total, $protocol_name="total packets, cycle number", $protocol_total=cycle_count];
+		Log::write(Unusual_protocols::LOG2, total_rec);
+		
 		while (j < 255)
      		{
-        		proto_counts[j] = 0;
+			if (proto_counts[j] > 0)
+			{
+				if (j < 144)
+                	                total_rec = [$protocol=j, $protocol_name=protocol_names[j], $protocol_total=proto_counts[j]];
+	                        else
+        	                        total_rec = [$protocol=j, $protocol_name="N/A", $protocol_total=proto_counts[j]];
+				Log::write(Unusual_protocols::LOG2, total_rec);
+			}
+			proto_counts[j] = 0;
         		protos_logged[j] = F;
-        		j += 1;
-     		}
+     			j += 1;
+		}
+
+		#Log::write(Unusual_protocols::LOG2, total_rec);
 		packet_count = 0; 
 	}
 	#print thresholds[10]$payload;
