@@ -80,7 +80,6 @@ bool EthernetAnalyzer::AnalyzePacket(size_t len, const uint8_t* data, Packet* pa
 			for(int count=(15+(((int)header_length - 64)*32/8)); count < (14+(int)total_length); count++)
 			{
 				if(data[count] || data[count] == 0)
-					//printf("%02x", data[count]);
 					sprintf(payload + strlen(payload), "%02x", data[count]);
 			}
 		}
