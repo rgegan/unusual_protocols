@@ -58,12 +58,13 @@ const sctp_thresh = 1;
 # protocol counters
 global proto_counts: vector of count;
 global protos_logged: vector of bool;
+global protos_seen: vector of bool;
 global packet_count: count = 0;
 global cycle_count: count = 0;
 global packet_total: count = 0;
 
 export {
-    redef enum Log::ID += { LOG, LOG2 };
+    redef enum Log::ID += { LOG, LOG2, LOG_NEW };
 
     type Info: record {
         ts: time        &log;
@@ -79,6 +80,12 @@ export {
 	protocol_name: string &log;
 	protocol_total: count &log;
     };
+
+    type New_Protocol: record {
+	ts: time        &log;
+        protocol: count &log;
+        protocol_name: string &log;
+    };
 }
 
 event zeek_init() &priority=5
@@ -92,6 +99,8 @@ event zeek_init() &priority=5
     Log::create_stream(Unusual_protocols::LOG, [$columns=Info, $path="unusual_protocols"]);
     # Create a stream for logging the distribution and other stats
     Log::create_stream(Unusual_protocols::LOG2, [$columns=Totals, $path="protocol_totals"]);
+    # Create a stream for logging protocols appearing for the first time
+    Log::create_stream(Unusual_protocols::LOG_NEW, [$columns=New_Protocol, $path="new_protocols"]);
     # Fill the count array with 0s
     local i: count;
     i = 0;
@@ -100,14 +109,10 @@ event zeek_init() &priority=5
      {
 	proto_counts += 0;
 	protos_logged += F;
+	protos_seen += F;
 	i += 1;
      }
     }
-
-event test(src: count)
-{
-  print "works";
-}
 
 event new_ip_protocol(src_ip: addr, dst_ip: addr, protocol: count, esp_protocol: count)
     {
@@ -130,7 +135,7 @@ event new_ip_protocol(src_ip: addr, dst_ip: addr, protocol: count, esp_protocol:
 
 	local rec: Unusual_protocols::Info = [$ts=network_time(), $src_ip=src, $dst_ip=dst, $protocol=protocol, $esp=esp_protocol, $protocol_name=proto_name];
 	
-	local i: count;
+	#local i: count;
 
 	if (esp_protocol < 256 && esp_protocol >= 0)
         {
@@ -146,10 +151,19 @@ event new_ip_protocol(src_ip: addr, dst_ip: addr, protocol: count, esp_protocol:
 		rec = [$ts=network_time(), $src_ip=src, $dst_ip=dst, $protocol=protocol, $esp=esp_protocol, $protocol_name=proto_name];
         }
 
-	i = protocol;
+	#i = protocol;
 	
 	# Update the protocol counts
-	proto_counts[i] += 1;
+	proto_counts[protocol] += 1;
+	
+	# Log new protocols seen for the first time
+	if(protos_seen[protocol] == F)
+	{
+		local new_rec: Unusual_protocols::New_Protocol;
+		new_rec = [$ts=network_time(), $protocol=protocol, $protocol_name=proto_name]; 
+		protos_seen[protocol] = T;
+		Log::write(Unusual_protocols::LOG_NEW, new_rec);	
+	}
 
 	#print "Odd protocol found";
 	#print src_ip, dst_ip, protocol, esp_protocol, proto_name;
