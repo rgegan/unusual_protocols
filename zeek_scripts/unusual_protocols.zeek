@@ -4,7 +4,7 @@ module Unusual_protocols;
 # log_once, True = log every time a packet with that protocol appears past threshold, False = log once past threshold
 const log_once = T;
 # log_all, True = log every protocol over a threshold (log_all_thresh), False = log only those specified in thresholds.file
-const log_all = F;
+const log_all = T;
 const log_all_thresh = 1;
 # log_distribution, True = writes the overall protocol count distribution to a log after set number of packets
 const log_distribution = T;
@@ -310,9 +310,17 @@ event new_ip_protocol(src_ip: addr, dst_ip: addr, protocol: count, esp_protocol:
 		}
 		print entropy;
 		if (entropy > top_ent)
+		{
 			top_ent = entropy;
+			total_rec = [$ts=network_time(), $msg_type="New high - Entropy", $protocol=0, $protocol_name="N/A", $protocol_total=0, $std_dev=std_dev, $entropy=entropy];
+			Log::write(Unusual_protocols::LOG2, total_rec);
+		}
 		if (entropy < low_ent)
+		{
 			low_ent = entropy;
+			total_rec = [$ts=network_time(), $msg_type="New low - Entropy", $protocol=0, $protocol_name="N/A", $protocol_total=0, $std_dev=std_dev, $entropy=entropy];
+			Log::write(Unusual_protocols::LOG2, total_rec);
+		}
 		print top_ent,low_ent;
 		# Calculate variance and entropy of protocol counts over the last X cycles
 		total_rec = [$ts=network_time(), $msg_type="Statistics", $protocol=0, $protocol_name="N/A", $protocol_total=0, $std_dev=std_dev, $entropy=entropy];
