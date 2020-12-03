@@ -11,7 +11,7 @@ const log_distribution = T;
 const log_distr_pkts = 1000.0; #100000;
 # reset, True = start logging protocols again in new cycles if they pass the threshold again
 const reset = T;
-const check_esp = T;
+const check_esp = F;
 
 
 # file reading for protocol thresholds
