@@ -1,4 +1,4 @@
-#fields	protocol	payload	threshold
-6	T	70
-4	F	3
-58	T	1
+#fields	protocol	threshold
+6 70
+4 3
+58  1
