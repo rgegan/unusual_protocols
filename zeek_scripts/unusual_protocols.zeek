@@ -8,10 +8,10 @@ const log_all = T;
 const log_all_thresh = 1;
 # log_distribution, True = writes the overall protocol count distribution to a log after set number of packets
 const log_distribution = T;
-const log_distr_pkts = 1000.0; #100000;
+const log_distr_pkts = 10000.0;
 # reset, True = start logging protocols again in new cycles if they pass the threshold again
 const reset = T;
-const check_esp = F;
+const check_esp = T;
 
 
 # file reading for protocol thresholds
@@ -21,7 +21,7 @@ type Idx: record {
 };
 
 type Val: record {
-        payload: bool;
+        #payload: bool;
 	threshold: count;
 };
 
@@ -204,15 +204,7 @@ event new_ip_protocol(src_ip: addr, dst_ip: addr, protocol: count, esp_protocol:
 		}
                 else if((proto_counts[protocol] > thresholds[protocol]$threshold))
                 {
-                        if(thresholds[protocol]$payload)
-                        {
-                                Log::write(Unusual_protocols::LOG, rec);
-                        }
-                        else
-                        {
-                                #rec = [$ts=network_time(), $src_ip=src, $dst_ip=dst, $protocol=protocol, $esp=esp_protocol];
-                                Log::write(Unusual_protocols::LOG, rec);
-                        }
+                        Log::write(Unusual_protocols::LOG, rec);
 			if ( log_once == T)
 			{
 				protos_logged[protocol] = T;
@@ -252,9 +244,9 @@ event new_ip_protocol(src_ip: addr, dst_ip: addr, protocol: count, esp_protocol:
 					top_protocol_count = proto_counts[j];
 				}
 				if (j < 144)
-                	                total_rec = [$ts=network_time(), $msg_type=" ", $protocol=j, $protocol_name=protocol_names[j], $protocol_total=proto_counts[j], $std_dev=0.0, $entropy=0.0];
+                	                total_rec = [$ts=network_time(), $msg_type="proto_count", $protocol=j, $protocol_name=protocol_names[j], $protocol_total=proto_counts[j], $std_dev=0.0, $entropy=0.0];
 	                        else
-        	                        total_rec = [$ts=network_time(), $msg_type=" ", $protocol=j, $protocol_name="N/A", $protocol_total=proto_counts[j], $std_dev=0.0, $entropy=0.0];
+        	                        total_rec = [$ts=network_time(), $msg_type="proto_count", $protocol=j, $protocol_name="N/A", $protocol_total=proto_counts[j], $std_dev=0.0, $entropy=0.0];
 				Log::write(Unusual_protocols::LOG2, total_rec);
 			}
 			proto_counts[j] = 0;
@@ -305,7 +297,6 @@ event new_ip_protocol(src_ip: addr, dst_ip: addr, protocol: count, esp_protocol:
 		entropy = 0;
 		for (entry in distribution)
 		{
-			#print distribution[entry];
 			entropy += -1 * (distribution[entry]/log_distr_pkts * ln(distribution[entry]/log_distr_pkts));
 		}
 		print entropy;
@@ -331,4 +322,5 @@ event new_ip_protocol(src_ip: addr, dst_ip: addr, protocol: count, esp_protocol:
 	#print thresholds[10]$payload;
 	#for (key,value in thresholds)
 		#print key,value;
+	#print network_time();
     }
