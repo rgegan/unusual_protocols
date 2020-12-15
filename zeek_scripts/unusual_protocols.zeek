@@ -267,7 +267,6 @@ event new_ip_protocol(src_ip: addr, dst_ip: addr, protocol: count, esp_protocol:
 			Log::write(Unusual_protocols::LOG2, total_rec);
 		}
 
-		print distribution;
 		# Calculate the mean, variance, and entropy of protocol counts
 		local mean:double;
 		local variance:double;
@@ -289,9 +288,7 @@ event new_ip_protocol(src_ip: addr, dst_ip: addr, protocol: count, esp_protocol:
 			total += (distribution[entry]-mean)*(distribution[entry]-mean);
 		}
 		variance = total/num_protocols;
-		#print variance;
 		std_dev = sqrt(variance);
-		print std_dev;
 
 		# Shannon entropy
 		entropy = 0;
@@ -299,7 +296,7 @@ event new_ip_protocol(src_ip: addr, dst_ip: addr, protocol: count, esp_protocol:
 		{
 			entropy += -1 * (distribution[entry]/log_distr_pkts * ln(distribution[entry]/log_distr_pkts));
 		}
-		print entropy;
+		
 		if (entropy > top_ent)
 		{
 			top_ent = entropy;
@@ -312,15 +309,11 @@ event new_ip_protocol(src_ip: addr, dst_ip: addr, protocol: count, esp_protocol:
 			total_rec = [$ts=network_time(), $msg_type="New low - Entropy", $protocol=0, $protocol_name="N/A", $protocol_total=0, $std_dev=std_dev, $entropy=entropy];
 			Log::write(Unusual_protocols::LOG2, total_rec);
 		}
-		print top_ent,low_ent;
+		
 		# Calculate variance and entropy of protocol counts over the last X cycles
 		total_rec = [$ts=network_time(), $msg_type="Statistics", $protocol=0, $protocol_name="N/A", $protocol_total=0, $std_dev=std_dev, $entropy=entropy];
 		
 		Log::write(Unusual_protocols::LOG2, total_rec);
 		packet_count = 0; 
 	}
-	#print thresholds[10]$payload;
-	#for (key,value in thresholds)
-		#print key,value;
-	#print network_time();
     }
