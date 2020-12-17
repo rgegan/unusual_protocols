@@ -8,7 +8,7 @@ This GitHub repository contains code for monitoring protocol usage with Zeek, in
 
 **l7_unusual.zeek**:  This script adds a new function to **unusual_protocols.zeek**.  It logs when certain L7 protocols appear over L4 protocols besides TCP.  Currently, it checks HTTP, FTP, and SSH packets.
 
-Note that some of the monitoring in these scripts could become expensive for real-time monitoring, in which case it might be more well-suited for analyzing trace files.
+Note that because event are handled for each packet, some of the monitoring in these scripts could become expensive for real-time monitoring, in which case it might be more well-suited for analyzing trace files.
 
 # Python Scripts
 **nfdump_parser.py**:  This script takes an nfdump file and parses the protocol data, printing the protocols, and the number and percentage of flows/packets appearing with that protocol.
