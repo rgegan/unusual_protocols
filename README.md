@@ -16,3 +16,5 @@ Note that because event are handled for each packet, some of the monitoring in t
 **parse_router_results.py**:  This script reads in the text file created by router_protocols_script.sh, and outputs the protocol percentages per router, unique and unnamed protocols per router, and unique protocols (appearing only on a single router).
 
 **protocol_clustering.py**:  This script will perform density based clustering using DBSCAN based on a given protocol.  Uses the **packet_totals.log** file created by **unusual_protocols.zeek** to cluster the protocol totals with their timestamps.  The clustering parameters should be adjusted based on how ofter the distributions are logged.   
+
+![Image](table.PNG)
