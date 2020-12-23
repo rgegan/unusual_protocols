@@ -181,10 +181,8 @@ event eth_reply(src_ip: string, dst_ip: string, protocol: count)
         {
 		if( log_all == T) 
 		{
-			print "here";
 			if(eth_proto_counts[protocol] >= log_all_thresh)
 			{
-				print "there";
 				Log::write(Unusual_protocols::LOG, rec);	
 				if ( log_once == T)
                         	{
