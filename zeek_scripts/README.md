@@ -1,1 +1,1 @@
-![Image](tables2.png)
+![Image](tables2.PNG)
