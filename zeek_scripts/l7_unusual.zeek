@@ -167,15 +167,9 @@ event ftp_reply(c: connection, code: count, msg: string, cont_resp: bool)
 
 event ftp_request(c: connection, command: string, arg: string)
     {
-	print "ftp2";
-
 	# check if the IP protocol is something other than TCP
         if (current_protocol != 6)
         {
-                print "ftp running on";
-                print current_protocol;
-                print "end";
-
 		local proto_name: string = "N/A";
 
                 if(current_protocol < 144)
@@ -193,15 +187,10 @@ event ftp_request(c: connection, command: string, arg: string)
 event http_all_headers(c: connection, is_orig: bool, hlist: mime_header_list)
     {
 	http_counter += 1;
-	print "http";
 
 	# check if the IP protocol is something other than TCP
 	if (current_protocol != 6)
 	{
-		print "http running on";
-		print current_protocol;
-		print "end";
-
 		local proto_name: string = "N/A";
 
                 if(current_protocol < 144)
@@ -217,15 +206,9 @@ event http_all_headers(c: connection, is_orig: bool, hlist: mime_header_list)
 
 event ssh_capabilities(c: connection, cookie: string, capabilities: SSH::Capabilities)
     {
-	print "ssh";
-
 	# check if the IP protocol is something other than TCP
         if (current_protocol != 6)
         {
-                print "ssh running on";
-                print current_protocol;
-                print "end";
-
 		local proto_name: string = "N/A";
 
                 if(current_protocol < 144)
@@ -268,7 +251,6 @@ event new_ip_protocol(src_ip: addr, dst_ip: addr, protocol: count, esp_protocol:
 
 	local rec: Unusual_protocols::Info = [$ts=network_time(), $src_ip=src, $dst_ip=dst, $protocol=protocol, $esp=esp_protocol, $protocol_name=proto_name, $threshold=thresh, $cycle_count=cycle_count];
 	
-	#local i: count;
 
 	if (check_esp == T && esp_protocol < 256 && esp_protocol >= 0)
         {
@@ -296,16 +278,7 @@ event new_ip_protocol(src_ip: addr, dst_ip: addr, protocol: count, esp_protocol:
 		new_rec = [$ts=network_time(), $protocol=protocol, $protocol_name=proto_name]; 
 		protos_seen[protocol] = T;
 		Log::write(Unusual_protocols::LOG_NEW, new_rec);	
-	}
-
-	#print "Odd protocol found";
-	#print src_ip, dst_ip, protocol, esp_protocol, proto_name;
-	#print protocol_names[protocol];
-	#print proto_counts;
-	
-	# Check for unusual behavior (thresholds to start, try clustering later, but every packet clustering won't work)
-	# Also clustering doesn't make much sense, some kind of histogram analysis or changes in protocol composition instead
-	
+	}	
  
 	if (protos_logged[protocol] == F && (protocol in thresholds || log_all == T))
         {
@@ -336,11 +309,6 @@ event new_ip_protocol(src_ip: addr, dst_ip: addr, protocol: count, esp_protocol:
 				protos_logged[protocol] = T;
 			}
                 }
-		
-		#print thresholds[protocol];
-		# Record unusual protocols to the log (use weird for just flows, this is per packet)
-		# Add selective logging based on thresholds soon
-        #	Log::write(Unusual_protocols::LOG, rec);	
 		
 	}
 	if (packet_count >= log_distr_pkts && log_distribution == T)
@@ -393,7 +361,6 @@ event new_ip_protocol(src_ip: addr, dst_ip: addr, protocol: count, esp_protocol:
 			Log::write(Unusual_protocols::LOG2, total_rec);
 		}
 
-		print distribution;
 		# Calculate the mean, variance, and entropy of protocol counts
 		local mean:double;
 		local variance:double;
@@ -415,9 +382,7 @@ event new_ip_protocol(src_ip: addr, dst_ip: addr, protocol: count, esp_protocol:
 			total += (distribution[entry]-mean)*(distribution[entry]-mean);
 		}
 		variance = total/num_protocols;
-		#print variance;
 		std_dev = sqrt(variance);
-		print std_dev;
 
 		# Shannon entropy
 		entropy = 0;
@@ -438,15 +403,10 @@ event new_ip_protocol(src_ip: addr, dst_ip: addr, protocol: count, esp_protocol:
 			total_rec = [$ts=network_time(), $msg_type="New low - Entropy", $protocol=0, $protocol_name="N/A", $protocol_total=0, $std_dev=std_dev, $entropy=entropy];
 			Log::write(Unusual_protocols::LOG2, total_rec);
 		}
-		print top_ent,low_ent;
 		# Calculate variance and entropy of protocol counts over the last X cycles
 		total_rec = [$ts=network_time(), $msg_type="Statistics", $protocol=0, $protocol_name="N/A", $protocol_total=0, $std_dev=std_dev, $entropy=entropy];
 		
 		Log::write(Unusual_protocols::LOG2, total_rec);
 		packet_count = 0; 
 	}
-	#print thresholds[10]$payload;
-	#for (key,value in thresholds)
-		#print key,value;
-	#print network_time();
     }
