@@ -150,7 +150,6 @@ event new_ip_protocol(src_ip: addr, dst_ip: addr, protocol: count, esp_protocol:
 
 	local rec: Unusual_protocols::Info = [$ts=network_time(), $src_ip=src, $dst_ip=dst, $protocol=protocol, $esp=esp_protocol, $protocol_name=proto_name, $threshold=thresh, $cycle_count=cycle_count];
 	
-	#local i: count;
 
 	if (check_esp == T && esp_protocol < 256 && esp_protocol >= 0)
         {
@@ -179,11 +178,6 @@ event new_ip_protocol(src_ip: addr, dst_ip: addr, protocol: count, esp_protocol:
 		protos_seen[protocol] = T;
 		Log::write(Unusual_protocols::LOG_NEW, new_rec);	
 	}
-
-	#print "Odd protocol found";
-	#print src_ip, dst_ip, protocol, esp_protocol, proto_name;
-	#print protocol_names[protocol];
-	#print proto_counts;
 	
 	# Check for unusual behavior (thresholds to start, try clustering later, but every packet clustering won't work)
 	# Also clustering doesn't make much sense, some kind of histogram analysis or changes in protocol composition instead
@@ -210,11 +204,6 @@ event new_ip_protocol(src_ip: addr, dst_ip: addr, protocol: count, esp_protocol:
 				protos_logged[protocol] = T;
 			}
                 }
-		
-		#print thresholds[protocol];
-		# Record unusual protocols to the log (use weird for just flows, this is per packet)
-		# Add selective logging based on thresholds soon
-        #	Log::write(Unusual_protocols::LOG, rec);	
 		
 	}
 	if (packet_count >= log_distr_pkts && log_distribution == T)
